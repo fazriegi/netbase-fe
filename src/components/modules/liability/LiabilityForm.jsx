@@ -19,7 +19,7 @@ export default function LiabilityForm({
   isSubmit = false,
   isLoading = false,
   onFinish,
-  breadcrumbs = ["Liabilities"],
+  breadcrumbs = [],
   type = "add",
   onDelete,
 }) {

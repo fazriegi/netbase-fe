@@ -215,7 +215,7 @@ export default function TransactionPage() {
 
   return (
     <>
-      <PageHeader breadCrumb={["Cashflow"]} />
+      <PageHeader />
 
       {/* Summary Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: "1.5em" }}>

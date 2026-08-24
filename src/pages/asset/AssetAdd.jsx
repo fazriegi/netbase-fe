@@ -40,7 +40,6 @@ export default function AssetAdd() {
       onFinish={onFinish}
       isSubmit={isSubmit}
       form={form}
-      breadcrumbs={["Assets", "Add"]}
     />
   );
 }

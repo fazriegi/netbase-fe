@@ -76,7 +76,7 @@ export default function LiabilityPage() {
 
   return (
     <>
-      <PageHeader breadCrumb={["Liabilities"]} />
+      <PageHeader />
       <div
         style={{
           display: "flex",

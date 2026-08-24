@@ -113,7 +113,6 @@ export default function AssetEdit() {
       isSubmit={isSubmit}
       isLoading={isLoading}
       form={form}
-      breadcrumbs={["Assets", "Edit"]}
       type="edit"
       onDelete={onDelete}
     />

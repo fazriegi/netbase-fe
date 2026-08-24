@@ -113,7 +113,6 @@ export default function LiabilityEdit() {
       isSubmit={isSubmit}
       isLoading={isLoading}
       form={form}
-      breadcrumbs={["Liabilities", "Edit"]}
       type="edit"
       onDelete={onDelete}
     />

@@ -81,7 +81,7 @@ export default function Asset() {
 
   return (
     <>
-      <PageHeader breadCrumb={["Assets"]} />
+      <PageHeader />
       <div
         style={{
           display: "flex",

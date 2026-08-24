@@ -20,7 +20,7 @@ export default function AssetForm({
   isSubmit = false,
   isLoading = false,
   onFinish,
-  breadcrumbs = ["Assets"],
+  breadcrumbs = [],
   type = "add",
   onDelete,
 }) {

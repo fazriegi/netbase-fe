@@ -40,7 +40,6 @@ export default function LiabilityAdd() {
       onFinish={onFinish}
       isSubmit={isSubmit}
       form={form}
-      breadcrumbs={["Liabilities", "Add"]}
     />
   );
 }
