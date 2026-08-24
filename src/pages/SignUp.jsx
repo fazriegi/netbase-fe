@@ -42,7 +42,7 @@ export default function SignUp() {
       <GlassCard
         style={
           screens.sm
-            ? { padding: "4em", width: "20em" }
+            ? { padding: "4em", width: "30em" }
             : { padding: "3em", width: "100%" }
         }
       >
