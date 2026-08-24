@@ -34,22 +34,44 @@ export default function MilestoneTracker({
       ? Number(milestone.remaining_gap)
       : null;
 
+  const hasMilestone = Boolean(
+    milestoneData &&
+    (milestoneData.id ||
+      milestoneData.title ||
+      milestoneData.target_amount !== undefined ||
+      milestoneData.is_completed !== undefined)
+  );
+
   // Determine current financial state
+  // State 0: Empty (No milestone set or initial zero state)
   // State 1: Recovery Phase (Net Worth < 0, recovering towards Rp 0)
   // State 2: Milestone Achieved (isCompleted or Net Worth >= targetAmount)
   // State 3: Growth Phase (Net Worth >= 0 and targetAmount > currentNetWorth)
-  let state = "recovery"; // 'recovery' | 'achieved' | 'growth'
+  let state = "empty"; // 'empty' | 'recovery' | 'achieved' | 'growth'
 
   if (isCompleted) {
     state = "achieved";
-  } else if (targetAmount > 0 && currentNetWorth >= targetAmount) {
-    state = "achieved";
-  } else if (targetAmount === 0 && currentNetWorth >= 0) {
-    state = "achieved";
-  } else if (currentNetWorth < 0 || targetAmount === 0) {
-    state = "recovery";
+  } else if (hasMilestone && targetAmount > 0) {
+    if (currentNetWorth >= targetAmount) {
+      state = "achieved";
+    } else {
+      state = "growth";
+    }
+  } else if (hasMilestone && targetAmount === 0) {
+    if (baseline < 0 && currentNetWorth >= 0) {
+      state = "achieved";
+    } else if (currentNetWorth < 0) {
+      state = "recovery";
+    } else {
+      state = "empty";
+    }
   } else {
-    state = "growth";
+    // No milestone set yet
+    if (currentNetWorth < 0) {
+      state = "recovery";
+    } else {
+      state = "empty";
+    }
   }
 
   // Calculate accurate progress percentage & remaining gap
@@ -109,6 +131,78 @@ export default function MilestoneTracker({
       onMilestoneChange(newMilestone);
     }
   };
+
+  // Render State 0: No Milestone Set (Empty/Initial State)
+  if (state === "empty") {
+    return (
+      <>
+        <div
+          style={{
+            background: "rgba(22, 27, 34, 0.8)",
+            border: "1px dashed #30363D",
+            borderRadius: 12,
+            padding: compact ? "8px 12px" : "10px 14px",
+            minWidth: compact ? "100%" : 280,
+            boxSizing: "border-box",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
+            <span style={{ fontSize: 13 }}>🎯</span>
+            <div style={{ overflow: "hidden" }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#F0F6FC",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                Set Financial Milestone
+              </div>
+              <div style={{ fontSize: 10, color: "#8B949E", whiteSpace: "nowrap" }}>
+                Track your net worth goals
+              </div>
+            </div>
+          </div>
+
+          <Button
+            type="primary"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={() => setIsModalOpen(true)}
+            style={{
+              background: "linear-gradient(90deg, #2563EB 0%, #38BDF8 100%)",
+              border: "none",
+              color: "#FFFFFF",
+              fontWeight: 600,
+              fontSize: 11,
+              borderRadius: 6,
+              height: 26,
+              padding: "0 10px",
+              boxShadow: "0 0 8px rgba(37, 99, 235, 0.4)",
+              flexShrink: 0,
+            }}
+          >
+            Set Target
+          </Button>
+        </div>
+
+        <SetMilestoneModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveNewMilestone}
+          currentMilestone={milestone}
+          currentNetWorth={currentNetWorth}
+        />
+      </>
+    );
+  }
 
   // Render State 2: Milestone Achieved!
   if (state === "achieved") {
