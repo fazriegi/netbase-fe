@@ -1,17 +1,19 @@
-import { Button, Input, message, Space, theme } from "antd";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Button, Input, message, Space, theme, Grid, Spin } from "antd";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import qs from "qs";
 import SimpleTable from "./SimpleTable";
 import api from "src/pkg/api";
 import { SearchOutlined } from "@ant-design/icons";
 
 const getApiParam = (params) => ({
-  limit: params.pagination?.pageSize,
-  page: params.pagination?.current,
+  limit: params.pagination?.pageSize || params.limit,
+  page: params.pagination?.current || params.page,
   ...params,
 });
 
-function ListingTable({ endpoint, columns, extraParams, ...props }) {
+function ListingTable({ endpoint, columns, extraParams, renderMobileItem, ...props }) {
+  const screens = Grid.useBreakpoint();
+  const isMobile = screens.sm === false;
   const {
     token: { colorPrimary },
   } = theme.useToken();
@@ -23,15 +25,21 @@ function ListingTable({ endpoint, columns, extraParams, ...props }) {
   };
 
   const [fetchingData, setFetchingData] = useState(false);
+  const [fetchingMore, setFetchingMore] = useState(false);
   const [dataList, setDataList] = useState([]);
   const [tableParams, setTableParams] = useState(initialPagination);
   const [columnSearch, setColumnSearch] = useState({});
 
   const searchInput = useRef(null);
+  const sentinelRef = useRef(null);
 
-  const getData = async (params = tableParams) => {
+  const getData = async (params = tableParams, isAppend = false) => {
     try {
-      setFetchingData(true);
+      if (isAppend) {
+        setFetchingMore(true);
+      } else {
+        setFetchingData(true);
+      }
 
       const apiParams = {
         ...getApiParam(params),
@@ -42,16 +50,29 @@ function ListingTable({ endpoint, columns, extraParams, ...props }) {
 
       const res = await api.get(`${endpoint}?${qs.stringify(apiParams)}`);
 
-      const respData = res?.data?.data;
-      const data = respData.map((obj, idx) => ({
-        ...obj,
-        key: `${idx + 1}`,
-      }));
+      const respData = res?.data?.data || [];
+      const totalCount = res?.data?.pagination_meta?.total ?? 0;
 
-      setDataList(data);
+      if (isAppend) {
+        setDataList((prev) => [
+          ...prev,
+          ...respData.map((obj, idx) => ({
+            ...obj,
+            key: `${prev.length + idx + 1}`,
+          })),
+        ]);
+      } else {
+        const data = respData.map((obj, idx) => ({
+          ...obj,
+          key: `${idx + 1}`,
+        }));
+        setDataList(data);
+      }
+
       setTableParams((prev) => ({
         ...prev,
-        total: res?.data?.pagination_meta?.total ?? 0,
+        page: params.page || 1,
+        total: totalCount,
       }));
     } catch (err) {
       const apiMessage =
@@ -62,8 +83,42 @@ function ListingTable({ endpoint, columns, extraParams, ...props }) {
       message.error(apiMessage);
     } finally {
       setFetchingData(false);
+      setFetchingMore(false);
     }
   };
+
+  const hasMore = dataList.length < tableParams.total;
+
+  const loadMore = useCallback(() => {
+    if (fetchingData || fetchingMore || !hasMore) return;
+    const nextPage = tableParams.page + 1;
+    const nextParams = { ...tableParams, page: nextPage };
+    getData(nextParams, true);
+  }, [fetchingData, fetchingMore, hasMore, tableParams, extraParams, endpoint]);
+
+  // Infinite scroll IntersectionObserver on mobile
+  useEffect(() => {
+    if (!isMobile || !renderMobileItem) return;
+    if (!hasMore || fetchingData || fetchingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1, rootMargin: "120px" }
+    );
+
+    const currentEl = sentinelRef.current;
+    if (currentEl) {
+      observer.observe(currentEl);
+    }
+
+    return () => {
+      if (currentEl) observer.unobserve(currentEl);
+    };
+  }, [isMobile, renderMobileItem, hasMore, fetchingData, fetchingMore, loadMore]);
 
   const handleTableChange = (pagination, filters, sorter) => {
     const sortArray = Array.isArray(sorter) ? sorter : [sorter];
@@ -196,6 +251,67 @@ function ListingTable({ endpoint, columns, extraParams, ...props }) {
       return newCol;
     });
   }, [columns, getColumnSearchProps]);
+
+  // Mobile list view with infinite scroll
+  if (isMobile && renderMobileItem) {
+    return (
+      <div style={props?.style}>
+        {fetchingData ? (
+          <div style={{ textAlign: "center", padding: "40px 0" }}>
+            <Spin />
+          </div>
+        ) : dataList.length === 0 ? (
+          <div
+            style={{
+              background: "#161B22",
+              border: "1px dashed #30363D",
+              borderRadius: 14,
+              padding: "36px 20px",
+              textAlign: "center",
+              margin: "12px 0",
+            }}
+          >
+            <div style={{ fontSize: 32, marginBottom: 8 }}>💳</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#F0F6FC" }}>
+              No Data Available
+            </div>
+            <div style={{ fontSize: 12, color: "#8B949E", marginTop: 4 }}>
+              No records found for the selected filter.
+            </div>
+          </div>
+        ) : (
+          <div>
+            {dataList.map((item, idx) => renderMobileItem(item, idx))}
+
+            {/* Infinite Scroll Loading indicator or Sentinel */}
+            {fetchingMore && (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <Spin size="small" />
+              </div>
+            )}
+
+            {/* Invisible sentinel element for scroll-based loading */}
+            {hasMore && !fetchingMore && (
+              <div ref={sentinelRef} style={{ height: 20, width: "100%" }} />
+            )}
+
+            {!hasMore && dataList.length > 5 && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "16px 0",
+                  color: "#6E7681",
+                  fontSize: 11,
+                }}
+              >
+                All transactions loaded ({dataList.length})
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={props?.style}>
