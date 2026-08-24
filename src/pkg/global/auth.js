@@ -1,4 +1,5 @@
 import { message } from "antd";
+import api from "src/pkg/api";
 
 export const handleLogout = async () => {
   try {

@@ -47,7 +47,7 @@ export default function TransactionForm({
       setCategories(resCats.data?.data || []);
       setAssets(resAssets.data?.data || []);
       setLiabilities(resLiabs.data?.data || []);
-    } catch (err) {
+    } catch {
       message.error("Failed to load form dependencies");
     }
   };
@@ -93,7 +93,7 @@ export default function TransactionForm({
           liability_id: data.liability_id || undefined,
         });
       }
-    } catch (err) {
+    } catch {
       message.error("Failed to fetch transaction details");
       onClose();
     } finally {

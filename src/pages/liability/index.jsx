@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import ListingTable from "src/components/ListingTable";
 import PageHeader from "src/components/PageHeader";
 
-export default function index() {
+export default function LiabilityPage() {
   const {
     token: { colorPrimary },
   } = theme.useToken();

@@ -1,142 +1,166 @@
-import { Card, Button, Space, Typography, Tooltip, Grid } from "antd";
-import {
-  EyeOutlined,
-  EyeInvisibleOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-} from "@ant-design/icons";
-import numeral from "numeral";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Card, Button, Tooltip, Grid } from "antd";
+import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
+import { formatRupiah } from "src/pkg/helper";
+import { useDashboard } from "src/context/DashboardContext";
 
-const { Text } = Typography;
+export default function NetworthCard({ data, loading }) {
+  const { isPrivacyMode } = useDashboard();
+  const [isLocalPrivate, setIsLocalPrivate] = useState(isPrivacyMode);
 
-export default function NetworthCard({
-  showValue,
-  setShowValue,
-  data,
-  loading,
-}) {
-  const growth =
-    data?.growth_percentage != null ? Number(data.growth_percentage) : 0;
+  useEffect(() => {
+    setIsLocalPrivate(isPrivacyMode);
+  }, [isPrivacyMode]);
 
   const screens = Grid.useBreakpoint();
-  const isMobile = !screens.sm;
+  const isMobile = screens.lg === false;
 
-  let status = "neutral";
-  if (growth > 0) status = "positive";
-  else if (growth < 0) status = "negative";
+  const isMasked = isPrivacyMode || isLocalPrivate;
+  const rawNetWorth = data?.net_worth ?? 0;
+  const netWorth = typeof rawNetWorth === "number" ? rawNetWorth : parseFloat(rawNetWorth) || 0;
+  const rawGrowth = data?.growth_percentage ?? 0;
+  const numGrowth = typeof rawGrowth === "number" ? rawGrowth : parseFloat(rawGrowth) || 0;
 
-  const getStatusColor = () => {
-    if (status === "positive")
-      return { bg: "rgba(39, 174, 96, 0.2)", text: "#27ae60" };
-    if (status === "negative")
-      return { bg: "rgba(231, 76, 60, 0.2)", text: "#e74c3c" };
-    return { bg: "rgba(139, 155, 180, 0.2)", text: "#8b9bb4" };
-  };
+  const isPositiveGrowth = numGrowth > 0;
+  const isNegativeGrowth = numGrowth < 0;
+  const growthIcon = isNegativeGrowth ? "▼ " : isPositiveGrowth ? "▲ +" : "";
+  const growthLabel = `${growthIcon}${Math.abs(numGrowth).toFixed(1)}% vs last month`;
 
-  const statusColors = getStatusColor();
+  const badgeBg = isNegativeGrowth
+    ? "rgba(239, 68, 68, 0.15)"
+    : isPositiveGrowth
+      ? "rgba(16, 185, 129, 0.15)"
+      : "rgba(255, 255, 255, 0.08)";
+  const badgeBorder = isNegativeGrowth
+    ? "1px solid rgba(239, 68, 68, 0.3)"
+    : isPositiveGrowth
+      ? "1px solid rgba(16, 185, 129, 0.3)"
+      : "1px solid rgba(255, 255, 255, 0.12)";
+  const badgeColor = isNegativeGrowth
+    ? "#EF4444"
+    : isPositiveGrowth
+      ? "#10B981"
+      : "#CBD5E1";
 
   return (
-    <>
-      <Card
-        loading={loading}
-        variant="borderless"
-        styles={{ body: { padding: isMobile ? "12px 16px" : "24px" } }}
+    <Card
+      loading={loading}
+      variant="borderless"
+      style={{
+        background: "linear-gradient(135deg, #13273D 0%, #0E1A29 60%, #0B131F 100%)",
+        border: "1px solid #1E3553",
+        borderRadius: 14,
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
+        height: "100%",
+        minHeight: isMobile ? 128 : 148,
+      }}
+      styles={{
+        body: {
+          padding: isMobile ? "16px" : "20px 22px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          height: "100%",
+          boxSizing: "border-box",
+        },
+      }}
+    >
+      {/* Subtle background glow effect */}
+      <div
         style={{
-          background: "linear-gradient(180deg, #1c3d5a 0%, #0d1e2d 100%)",
-          height: isMobile ? 120 : 150,
-          position: "relative",
-          overflow: "hidden",
-          borderRadius: 12,
+          position: "absolute",
+          top: -40,
+          right: -40,
+          width: 120,
+          height: 120,
+          background: "radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(37, 99, 235, 0) 70%)",
+          borderRadius: "50%",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Card Header: Title & Privacy Toggle */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          zIndex: 2,
         }}
       >
-        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            color: "#94A3B8",
+            letterSpacing: "0.8px",
+          }}
+        >
+          TOTAL NET WORTH
+        </span>
+
+        <Tooltip title={isMasked ? "Show balance" : "Hide balance"}>
           <Button
             type="text"
             shape="circle"
-            icon={showValue ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-            onClick={() => setShowValue(!showValue)}
+            icon={isMasked ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+            onClick={() => setIsLocalPrivate(!isMasked)}
             style={{
-              color: "#8b9bb4",
+              color: "#94A3B8",
+              width: 28,
+              height: 28,
               display: "flex",
-              justifyContent: "center",
               alignItems: "center",
+              justifyContent: "center",
             }}
           />
-        </div>
+        </Tooltip>
+      </div>
 
-        <div
-          style={{
-            position: "relative",
-            zIndex: 1,
-            marginTop: isMobile ? 0 : 4,
-            paddingRight: 32,
-          }}
+      {/* Main Nominal */}
+      <div style={{ marginTop: isMobile ? 4 : 8, zIndex: 2 }}>
+        <Tooltip
+          title={isMasked ? "Click eye icon to reveal" : formatRupiah(netWorth, false)}
+          placement="topLeft"
         >
-          <span
+          <div
             style={{
-              display: "block",
-              fontSize: isMobile ? 12 : 14,
-              fontWeight: "600",
-              textTransform: "uppercase",
-              color: "#8b9bb4",
-              letterSpacing: "0.5px",
+              fontSize: isMobile ? 24 : 28,
+              fontWeight: 800,
+              color: "#FFFFFF",
+              letterSpacing: "-0.5px",
+              lineHeight: 1.2,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
-            Total Net Worth
-          </span>
-          <Tooltip
-            title={
-              showValue ? `Rp ${numeral(data?.net_worth).format("0,0")}` : null
-            }
-            placement="topLeft"
-          >
-            <h1
-              style={{
-                margin: isMobile ? "2px 0 4px 0" : "4px 0 8px 0",
-                fontSize: isMobile ? 24 : 32,
-                color: "white",
-                fontWeight: "bold",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {showValue
-                ? `Rp ${numeral(data?.net_worth).format("0,0")}`
-                : "Rp ************"}
-            </h1>
-          </Tooltip>
-          <Space align="center" size="small">
-            <div
-              style={{
-                backgroundColor: statusColors.bg,
-                color: statusColors.text,
-                padding: "2px 8px",
-                borderRadius: "4px",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                fontWeight: "bold",
-                fontSize: isMobile ? "11px" : "14px",
-              }}
-            >
-              {status === "positive" && <ArrowUpOutlined />}
-              {status === "negative" && <ArrowDownOutlined />}
-              <span>
-                {status === "positive" ? "+" : ""}
-                {growth.toFixed(1)}%
-              </span>
-            </div>
-            <Text
-              type="secondary"
-              style={{ fontSize: isMobile ? "11px" : "14px", color: "#8b9bb4" }}
-            >
-              vs last month
-            </Text>
-          </Space>
+            {formatRupiah(netWorth, isMasked)}
+          </div>
+        </Tooltip>
+      </div>
+
+      {/* MoM Badge */}
+      <div style={{ marginTop: isMobile ? 8 : 10, display: "flex", alignItems: "center", gap: 6, zIndex: 2 }}>
+        <div
+          style={{
+            backgroundColor: badgeBg,
+            border: badgeBorder,
+            color: badgeColor,
+            padding: "2px 8px",
+            borderRadius: 6,
+            fontSize: 11,
+            fontWeight: 600,
+            display: "inline-flex",
+            alignItems: "center",
+          }}
+        >
+          {growthLabel}
         </div>
-      </Card>
-    </>
+      </div>
+    </Card>
   );
 }

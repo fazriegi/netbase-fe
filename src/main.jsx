@@ -4,6 +4,7 @@ import "./index.css";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { ConfigProvider, theme, App as AntdApp } from "antd";
+import { DashboardProvider } from "./context/DashboardContext";
 
 const commonInputTokens = {
   colorBgContainer: "#0E0F12",
@@ -124,7 +125,9 @@ createRoot(document.getElementById("root")).render(
     >
       <AntdApp>
         <BrowserRouter>
-          <App />
+          <DashboardProvider>
+            <App />
+          </DashboardProvider>
         </BrowserRouter>
       </AntdApp>
     </ConfigProvider>
