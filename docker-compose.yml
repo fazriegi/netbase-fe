@@ -8,5 +8,7 @@ services:
         - VITE_APP_NAME=${VITE_APP_NAME}
     container_name: netbase-fe
     restart: always
+    environment:
+      TZ: Asia/Jakarta
     ports:
       - "${PORT:-3000}:80"
