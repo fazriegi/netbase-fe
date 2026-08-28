@@ -54,15 +54,21 @@ const InputNumeric = ({
           )}
 
           <InputNumber
-            {...props}
             defaultValue={defaultValue}
-            formatter={(value) => new Intl.NumberFormat("en-US").format(value)}
-            parser={(value) => value.replace(/,/g, "")}
+            formatter={(value) => {
+              if (value === undefined || value === null || value === "") return "";
+              const parts = `${value}`.split(".");
+              parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+              return parts.join(".");
+            }}
+            parser={(value) => (value ? value.replace(/,/g, "") : "")}
+            {...props}
             style={{
               width: "100%",
               cursor: "text",
               borderRadius: "0 6px 6px 0",
               ...inputStyle,
+              ...props?.style,
             }}
           />
         </Space.Compact>

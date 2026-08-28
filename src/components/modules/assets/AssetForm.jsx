@@ -182,12 +182,12 @@ export default function AssetForm({
                     rules={[
                       {
                         required: true,
-                        pattern: /^\d+$/,
+                        pattern: /^[0-9]+(\.[0-9]+)?$/,
                         message: "Please enter a valid number",
                       },
                     ]}
                   >
-                    <InputNumeric inputStyle={{ width: 120 }} />
+                    <InputNumeric inputStyle={{ width: 120 }} step="any" />
                   </Form.Item>
                   <Form.Item
                     label="Quantity"
