@@ -324,14 +324,14 @@ export default function LiabilityPage() {
     const isActive = Number(record.remaining_balance) > 0;
 
     const subDetails = [];
-    if (details.due_date) subDetails.push(`Due: Tgl ${details.due_date}`);
+    if (details.due_date) subDetails.push(`Due: Day ${details.due_date}`);
     if (details.monthly_installment)
       subDetails.push(
-        `Cicilan: ${formatRupiah(details.monthly_installment, isPrivacyMode)}`
+        `Installment: ${formatRupiah(details.monthly_installment, isPrivacyMode)}`
       );
-    if (details.tenor) subDetails.push(`${details.tenor} bln`);
+    if (details.tenor) subDetails.push(`${details.tenor} mos`);
     if (details.interest_rate_pa)
-      subDetails.push(`Bunga: ${details.interest_rate_pa}%`);
+      subDetails.push(`Interest: ${details.interest_rate_pa}%`);
 
     const subInfo = subDetails.join(" • ");
 
@@ -418,7 +418,7 @@ export default function LiabilityPage() {
             </div>
             {record.principal_amount > 0 && (
               <div style={{ fontSize: 10, color: "#8B949E", marginTop: 2 }}>
-                Plafon: {formatRupiah(record.principal_amount, isPrivacyMode)}
+                Principal: {formatRupiah(record.principal_amount, isPrivacyMode)}
               </div>
             )}
           </div>
