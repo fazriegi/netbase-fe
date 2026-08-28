@@ -49,7 +49,7 @@ export default function LiabilityPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOption, setSortOption] = useState("created_at desc");
   const [categories, setCategories] = useState([]);
-  const [kpiData, setKpiData] = useState({ totalLiabilities: 0 });
+  const [summaryData, setSummaryData] = useState({ totalBalance: 0, count: 0 });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch Category options for filter
@@ -68,27 +68,6 @@ export default function LiabilityPage() {
     };
     fetchCategories();
   }, []);
-
-  // Fetch KPI data (Total Liabilities)
-  const fetchKPI = useCallback(async () => {
-    try {
-      const res = await api.get("/v1/dashboard/networth");
-      const respData = res?.data?.data !== undefined ? res.data.data : res.data;
-      if (respData) {
-        setKpiData({
-          totalLiabilities: Number(
-            respData.total_liabilities ?? respData.totalLiabilities ?? 0
-          ),
-        });
-      }
-    } catch {
-      // Fallback
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchKPI();
-  }, [fetchKPI, refreshTrigger]);
 
   const extraParams = useMemo(() => {
     const params = {};
@@ -111,6 +90,53 @@ export default function LiabilityPage() {
 
     return params;
   }, [filterStatus, searchKeyword, selectedCategory, sortOption]);
+
+  // Fetch Summary based on current active filters
+  const fetchSummary = useCallback(async () => {
+    try {
+      const params = {
+        limit: 1000,
+        page: 1,
+        ...extraParams,
+      };
+      const res = await api.get("/v1/liabilities", { params });
+      const respData = res?.data?.data || [];
+      const totalCount = res?.data?.pagination_meta?.total ?? respData.length;
+      const total = respData.reduce(
+        (sum, item) => sum + Number(item.remaining_balance || 0),
+        0
+      );
+
+      setSummaryData({
+        totalBalance: total,
+        count: totalCount,
+      });
+    } catch {
+      // Fallback
+    }
+  }, [extraParams]);
+
+  useEffect(() => {
+    fetchSummary();
+  }, [fetchSummary, refreshTrigger]);
+
+  const summaryTitle = useMemo(() => {
+    if (searchKeyword && searchKeyword.trim()) {
+      return "Filtered Liabilities Value";
+    }
+
+    if (selectedCategory && selectedCategory !== "all") {
+      const catObj = categories.find((c) => c.id === selectedCategory);
+      if (catObj?.name) {
+        return `Total ${catObj.name} Liabilities`;
+      }
+      return "Filtered Liabilities Value";
+    }
+
+    if (filterStatus === "active") return "Total Active Liabilities";
+    if (filterStatus === "paid") return "Total Paid Liabilities";
+    return "Total Liabilities";
+  }, [searchKeyword, selectedCategory, categories, filterStatus]);
 
   const handleDelete = async (id, e) => {
     if (e) e.stopPropagation();
@@ -500,9 +526,22 @@ export default function LiabilityPage() {
                     textTransform: "uppercase",
                     color: "#8B949E",
                     letterSpacing: "0.5px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
                   }}
                 >
-                  Total Liabilities
+                  <span>{summaryTitle}</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: "#6E7681",
+                      textTransform: "none",
+                    }}
+                  >
+                    ({summaryData.count} item{summaryData.count !== 1 ? "s" : ""})
+                  </span>
                 </div>
                 <div
                   style={{
@@ -513,7 +552,7 @@ export default function LiabilityPage() {
                     letterSpacing: "-0.5px",
                   }}
                 >
-                  {formatRupiah(kpiData.totalLiabilities, isPrivacyMode)}
+                  {formatRupiah(summaryData.totalBalance, isPrivacyMode)}
                 </div>
               </div>
 

@@ -49,7 +49,7 @@ export default function Asset() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOption, setSortOption] = useState("created_at desc");
   const [categories, setCategories] = useState([]);
-  const [kpiData, setKpiData] = useState({ totalAssets: 0 });
+  const [summaryData, setSummaryData] = useState({ totalValue: 0, count: 0 });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch Category options for filter
@@ -68,25 +68,6 @@ export default function Asset() {
     };
     fetchCategories();
   }, []);
-
-  // Fetch KPI data (Total Assets)
-  const fetchKPI = useCallback(async () => {
-    try {
-      const res = await api.get("/v1/dashboard/networth");
-      const respData = res?.data?.data !== undefined ? res.data.data : res.data;
-      if (respData) {
-        setKpiData({
-          totalAssets: Number(respData.total_assets ?? respData.totalAssets ?? 0),
-        });
-      }
-    } catch {
-      // Fallback
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchKPI();
-  }, [fetchKPI, refreshTrigger]);
 
   const extraParams = useMemo(() => {
     const params = {};
@@ -109,6 +90,53 @@ export default function Asset() {
 
     return params;
   }, [filterStatus, searchKeyword, selectedCategory, sortOption]);
+
+  // Fetch Summary based on current active filters
+  const fetchSummary = useCallback(async () => {
+    try {
+      const params = {
+        limit: 1000,
+        page: 1,
+        ...extraParams,
+      };
+      const res = await api.get("/v1/assets", { params });
+      const respData = res?.data?.data || [];
+      const totalCount = res?.data?.pagination_meta?.total ?? respData.length;
+      const total = respData.reduce(
+        (sum, item) => sum + Number(item.current_value || 0),
+        0
+      );
+
+      setSummaryData({
+        totalValue: total,
+        count: totalCount,
+      });
+    } catch {
+      // Fallback
+    }
+  }, [extraParams]);
+
+  useEffect(() => {
+    fetchSummary();
+  }, [fetchSummary, refreshTrigger]);
+
+  const summaryTitle = useMemo(() => {
+    if (searchKeyword && searchKeyword.trim()) {
+      return "Filtered Assets Value";
+    }
+
+    if (selectedCategory && selectedCategory !== "all") {
+      const catObj = categories.find((c) => c.id === selectedCategory);
+      if (catObj?.name) {
+        return `Total ${catObj.name} Assets`;
+      }
+      return "Filtered Assets Value";
+    }
+
+    if (filterStatus === "active") return "Total Active Assets";
+    if (filterStatus === "inactive") return "Total Inactive Assets";
+    return "Total Assets";
+  }, [searchKeyword, selectedCategory, categories, filterStatus]);
 
   const handleDelete = async (id, e) => {
     if (e) e.stopPropagation();
@@ -465,9 +493,22 @@ export default function Asset() {
                     textTransform: "uppercase",
                     color: "#8B949E",
                     letterSpacing: "0.5px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
                   }}
                 >
-                  Total Asset Value
+                  <span>{summaryTitle}</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: "#6E7681",
+                      textTransform: "none",
+                    }}
+                  >
+                    ({summaryData.count} item{summaryData.count !== 1 ? "s" : ""})
+                  </span>
                 </div>
                 <div
                   style={{
@@ -478,7 +519,7 @@ export default function Asset() {
                     letterSpacing: "-0.5px",
                   }}
                 >
-                  {formatRupiah(kpiData.totalAssets, isPrivacyMode)}
+                  {formatRupiah(summaryData.totalValue, isPrivacyMode)}
                 </div>
               </div>
 
