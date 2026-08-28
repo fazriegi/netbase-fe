@@ -98,8 +98,9 @@ export default function MilestoneTracker({
     if (backendProgress !== null && !isNaN(backendProgress)) {
       progressPercentage = Math.min(100, Math.max(0, backendProgress));
     } else {
-      const totalSpan = Math.abs(baseline) || Math.abs(currentNetWorth) || 20000000;
-      const progressFromBase = currentNetWorth - baseline;
+      const startBase = baseline < 0 ? baseline : currentNetWorth;
+      const totalSpan = Math.abs(startBase);
+      const progressFromBase = currentNetWorth - startBase;
       const calc = totalSpan > 0 ? (progressFromBase / totalSpan) * 100 : 0;
       progressPercentage = Math.min(100, Math.max(0, calc));
     }
@@ -524,7 +525,7 @@ export default function MilestoneTracker({
           />
         </div>
 
-        {/* Bottom Labels: Rp 0 and Remaining Gap */}
+        {/* Bottom Labels: Current Net Worth / Target and Remaining Gap */}
         <div
           style={{
             display: "flex",
@@ -538,8 +539,12 @@ export default function MilestoneTracker({
             fontWeight: 500,
           }}
         >
-          <span>Rp 0</span>
-          <span>Remaining {formatRupiah(gapAmount, isPrivacyMode)}</span>
+          <span>
+            {formatRupiah(currentNetWorth, isPrivacyMode)} / {formatRupiah(0, isPrivacyMode)}
+          </span>
+          <span style={{ color: "#F59E0B", fontWeight: 600 }}>
+            Remaining {formatRupiah(gapAmount, isPrivacyMode)}
+          </span>
         </div>
       </div>
 
