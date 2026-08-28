@@ -40,7 +40,7 @@ import { useDashboard } from "src/context/DashboardContext";
 export default function TransactionPage() {
   const { message } = App.useApp();
   const { isPrivacyMode } = useDashboard();
-  
+
   // Date & Period Filter
   const [filterType, setFilterType] = useState("month"); // "week" | "month" | "year" | "range" | "all"
   const [selectedDate, setSelectedDate] = useState(dayjs());
@@ -52,7 +52,7 @@ export default function TransactionPage() {
   // Search, Type, & Sort Filters (Works on both Mobile & Desktop)
   const [searchKeyword, setSearchKeyword] = useState("");
   const [transactionType, setTransactionType] = useState("all"); // "all" | "income" | "expense"
-  const [sortOption, setSortOption] = useState("transaction_date desc");
+  const [sortOption, setSortOption] = useState("transaction_date desc, created_at desc");
   const [viewMode, setViewMode] = useState("card"); // "card" | "table" on mobile
 
   const [formOpen, setFormOpen] = useState(false);
@@ -826,8 +826,8 @@ export default function TransactionPage() {
             style={{ width: isMobile ? "auto" : 160, flex: isMobile ? 1 : "none" }}
             popupMatchSelectWidth={false}
             options={[
-              { label: "Newest First", value: "transaction_date desc" },
-              { label: "Oldest First", value: "transaction_date asc" },
+              { label: "Newest First", value: "transaction_date desc, created_at desc" },
+              { label: "Oldest First", value: "transaction_date asc, created_at asc" },
               { label: "Highest Amount", value: "amount desc" },
               { label: "Lowest Amount", value: "amount asc" },
             ]}
