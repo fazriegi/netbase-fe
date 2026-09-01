@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Grid } from "antd";
+import { Card, Grid, Spin } from "antd";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -93,6 +93,7 @@ export default function NetWorthChartCard({
   currentNetWorth = 0,
   onMilestoneChange,
   loading = false,
+  chartLoading = false,
 }) {
   const { isPrivacyMode, selectedTimeframe, setSelectedTimeframe } = useDashboard();
   const screens = Grid.useBreakpoint();
@@ -416,8 +417,9 @@ export default function NetWorthChartCard({
       )}
 
       {/* Chart Canvas */}
-      <div style={{ width: "100%", height: isMobile ? 240 : 320, minHeight: isMobile ? 240 : 320 }}>
-        {data && data.length > 0 ? (
+      <Spin spinning={chartLoading} style={{ width: "100%" }}>
+        <div style={{ width: "100%", height: isMobile ? 240 : 320, minHeight: isMobile ? 240 : 320 }}>
+          {data && data.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
@@ -553,21 +555,22 @@ export default function NetWorthChartCard({
               />
             </AreaChart>
           </ResponsiveContainer>
-        ) : (
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#6E7681",
-              fontSize: 13,
-            }}
-          >
-            No trajectory data available for timeframe {selectedTimeframe}
-          </div>
-        )}
-      </div>
+          ) : chartLoading ? null : (
+            <div
+              style={{
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#6E7681",
+                fontSize: 13,
+              }}
+            >
+              No trajectory data available for timeframe {selectedTimeframe}
+            </div>
+          )}
+        </div>
+      </Spin>
     </Card>
   );
 }
