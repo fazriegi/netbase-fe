@@ -16,7 +16,13 @@ export default function Home() {
   const { selectedTimeframe } = useDashboard();
 
   const [loading, setLoading] = useState(false);
+  const [trajectoryLoading, setTrajectoryLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState({});
+
+  const latestTimeframeRef = React.useRef(selectedTimeframe || "1M");
+  useEffect(() => {
+    latestTimeframeRef.current = selectedTimeframe || "1M";
+  }, [selectedTimeframe]);
 
   const fetchNetWorth = useCallback(async () => {
     try {
@@ -38,11 +44,12 @@ export default function Home() {
   }, [message]);
 
   const fetchNetworthHistory = useCallback(async (timeframe = "ALL") => {
+    setTrajectoryLoading(true);
     try {
       const response = await api.get(`/v1/dashboard/networth/history?timeframe=${timeframe}`);
       const respBody = response?.data;
       const data = respBody?.data !== undefined ? respBody.data : respBody;
-      if (data) {
+      if (data && timeframe === latestTimeframeRef.current) {
         setDashboardData((prev) => ({
           ...prev,
           trajectoryHistory: data,
@@ -52,6 +59,10 @@ export default function Home() {
       const apiMessage = err?.response?.data?.message;
       if (apiMessage && err?.response?.status !== 404) {
         message.error(apiMessage);
+      }
+    } finally {
+      if (timeframe === latestTimeframeRef.current) {
+        setTrajectoryLoading(false);
       }
     }
   }, [message]);
@@ -98,14 +109,13 @@ export default function Home() {
     try {
       await Promise.allSettled([
         fetchNetWorth(),
-        fetchNetworthHistory(selectedTimeframe || "1M"),
         fetchCashflowData(),
         fetchMilestone(),
       ]);
     } finally {
       setLoading(false);
     }
-  }, [fetchNetWorth, fetchNetworthHistory, selectedTimeframe, fetchCashflowData, fetchMilestone]);
+  }, [fetchNetWorth, fetchCashflowData, fetchMilestone]);
 
   useEffect(() => {
     fetchAllDashboardData();
@@ -117,7 +127,6 @@ export default function Home() {
 
   const handleMilestoneChange = async (newMilestone) => {
     try {
-      setLoading(true);
       const payload = {
         title: newMilestone?.title,
         target_amount: newMilestone?.target_amount ?? newMilestone?.targetAmount ?? 0,
@@ -133,8 +142,6 @@ export default function Home() {
     } catch (err) {
       const apiMessage = err?.response?.data?.message || "Failed to update milestone";
       message.error(apiMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -172,6 +179,7 @@ export default function Home() {
             currentNetWorth={currentNetWorth}
             onMilestoneChange={handleMilestoneChange}
             loading={loading}
+            chartLoading={trajectoryLoading}
           />
         </Col>
       </Row>
