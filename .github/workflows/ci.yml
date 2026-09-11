@@ -1,0 +1,38 @@
+name: CI - Code Quality & Build
+
+on:
+  push:
+    branches:
+      - master
+      - development
+  pull_request:
+    branches:
+      - master
+      - development
+
+jobs:
+  lint-and-build:
+    name: Lint & Build Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Vite Build
+        run: npm run build
+        env:
+          VITE_BASE_URL: ${{ vars.VITE_BASE_URL || 'http://localhost:8080' }}
+          VITE_APP_NAME: ${{ vars.VITE_APP_NAME || 'NetBase' }}

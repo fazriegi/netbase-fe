@@ -99,6 +99,46 @@ Make sure you have [Docker](https://docs.docker.com/get-docker/) and [Docker Com
    docker compose down
    ```
 
+## CI/CD & Deployment
+
+This project uses **GitHub Actions** for automated continuous integration and continuous deployment:
+
+### 1. Continuous Integration (CI)
+- Workflow file: `.github/workflows/ci.yml`
+- Runs on: Every push and pull request to `master` and `development`.
+- Validates code style and checks build integrity with `npm run lint` and `npm run build`.
+
+### 2. Docker Image & Continuous Deployment (CD)
+- Workflow file: `.github/workflows/deploy.yml`
+- Runs on: Every push to `master` (or manual trigger via `workflow_dispatch`).
+- Builds a production-ready Nginx container, tags it, and publishes it to **GitHub Container Registry** (`ghcr.io/fazriegi/netbase-fe:latest`).
+- Automatically deploys to your remote server via SSH using `docker-compose.prod.yml`.
+
+### Required GitHub Secrets & Variables
+
+To enable automated deployment to your VPS, add the following secrets in GitHub (**Settings > Secrets and variables > Actions**):
+
+| Secret / Variable | Type | Description |
+|---|---|---|
+| `SSH_HOST` | Secret | IP address or domain name of your remote server |
+| `SSH_USER` | Secret | SSH username (e.g. `ubuntu`, `root`, or `deploy`) |
+| `SSH_KEY` | Secret | Private SSH key for server access |
+| `SSH_PORT` | Secret | *(Optional)* SSH port (defaults to `22`) |
+| `REMOTE_TARGET_DIR` | Secret | *(Optional)* Directory on server (defaults to `~/netbase-fe`) |
+| `VITE_BASE_URL` | Variable | *(Optional)* Backend API base URL for production builds |
+| `VITE_APP_NAME` | Variable | *(Optional)* App name displayed in production |
+
+### Production Deployment on Server
+
+On your VPS, you only need `docker-compose.prod.yml` to run the latest published image:
+
+```bash
+# 1. Place docker-compose.prod.yml in your remote directory (e.g. ~/netbase-fe)
+# 2. Pull and start the container
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
 ## Author
 
 Fazri Egi - [Github](https://github.com/fazriegi)

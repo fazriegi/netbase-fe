@@ -1,0 +1,9 @@
+services:
+  web:
+    image: ghcr.io/fazriegi/netbase-fe:latest
+    container_name: netbase-fe
+    restart: always
+    environment:
+      TZ: Asia/Jakarta
+    ports:
+      - "127.0.0.1:${PORT:-3000}:80"
