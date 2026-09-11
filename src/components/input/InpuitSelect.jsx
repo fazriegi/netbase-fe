@@ -6,7 +6,6 @@ export default function InputSelect({
   selectLabel = "",
   selectValue = "",
   datasource = "",
-  payload = {},
   listOptions = [],
   onChange,
   onDropdownVisibleChange,
