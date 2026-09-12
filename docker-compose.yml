@@ -1,5 +1,6 @@
 services:
   web:
+    image: ghcr.io/fazriegi/netbase-fe:latest
     build:
       context: .
       dockerfile: Dockerfile
