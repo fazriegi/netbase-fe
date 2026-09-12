@@ -24,7 +24,12 @@ export default function NetworthCard({ data, loading }) {
   const isPositiveGrowth = numGrowth > 0;
   const isNegativeGrowth = numGrowth < 0;
   const growthIcon = isNegativeGrowth ? "▼ " : isPositiveGrowth ? "▲ +" : "";
-  const growthLabel = `${growthIcon}${Math.abs(numGrowth).toFixed(1)}% vs last month`;
+  const absGrowth = Math.abs(numGrowth);
+  const formattedGrowth =
+    absGrowth >= 99.95 && absGrowth < 100
+      ? absGrowth.toFixed(2)
+      : absGrowth.toFixed(1);
+  const growthLabel = `${growthIcon}${formattedGrowth}% vs last cycle`;
 
   const badgeBg = isNegativeGrowth
     ? "rgba(239, 68, 68, 0.15)"
