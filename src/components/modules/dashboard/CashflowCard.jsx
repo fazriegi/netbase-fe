@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, Grid, Tooltip } from "antd";
-import { formatRupiah } from "src/pkg/helper";
+import dayjs from "dayjs";
+import { formatRupiah, formatCycleRangeLabel, getFinancialMonthRange } from "src/pkg/helper";
 import { useDashboard } from "src/context/DashboardContext";
 
 export default function CashflowCard({ data: dataProp, cashflowData, loading = false }) {
-  const { isPrivacyMode } = useDashboard();
+  const { isPrivacyMode, cycleStartDay } = useDashboard();
   const screens = Grid.useBreakpoint();
   const isMobile = screens.lg === false;
 
@@ -19,6 +20,17 @@ export default function CashflowCard({ data: dataProp, cashflowData, loading = f
   const maxVal = Math.max(income, expense) || 1;
   const incomePercent = income > 0 ? Math.min(100, Math.round((income / maxVal) * 100)) : 0;
   const expensePercent = expense > 0 ? Math.min(100, Math.round((expense / maxVal) * 100)) : 0;
+
+  // Active date range (supports same year vs different year via formatCycleRangeLabel)
+  const startDate = data?.start_date;
+  const endDate = data?.end_date;
+  const dateRangeLabel = useMemo(() => {
+    if (startDate && endDate) {
+      return formatCycleRangeLabel(startDate, endDate);
+    }
+    return getFinancialMonthRange(cycleStartDay || 1, dayjs()).label;
+  }, [startDate, endDate, cycleStartDay]);
+
 
   return (
     <Card
@@ -52,16 +64,33 @@ export default function CashflowCard({ data: dataProp, cashflowData, loading = f
             marginBottom: 20,
           }}
         >
-          <span
-            style={{
-              fontSize: isMobile ? 15 : 17,
-              fontWeight: 700,
-              color: "#F0F6FC",
-              letterSpacing: "-0.2px",
-            }}
-          >
-            Monthly Cashflow
-          </span>
+          <div>
+            <div
+              style={{
+                fontSize: isMobile ? 15 : 17,
+                fontWeight: 700,
+                color: "#F0F6FC",
+                letterSpacing: "-0.2px",
+                lineHeight: 1.2,
+              }}
+            >
+              Monthly Cashflow
+            </div>
+            {dateRangeLabel && (
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "#8B949E",
+                  marginTop: 4,
+                  letterSpacing: "0.2px",
+                }}
+              >
+                {dateRangeLabel}
+              </div>
+            )}
+          </div>
+
 
           <div
             style={{

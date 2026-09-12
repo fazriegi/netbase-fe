@@ -2,6 +2,7 @@ import AssetAdd from "./pages/asset/AssetAdd";
 import AssetEdit from "./pages/asset/AssetEdit";
 import LiabilityAdd from "./pages/liability/LiabilityAdd";
 import LiabilityEdit from "./pages/liability/LiabilityEdit";
+import SettingsPage from "./pages/settings";
 
 export const routes = [
   {
@@ -20,7 +21,12 @@ export const routes = [
     path: "/liabilities/:id",
     element: LiabilityEdit,
   },
+  {
+    path: "/settings",
+    element: SettingsPage,
+  },
 ];
+
 
 
 

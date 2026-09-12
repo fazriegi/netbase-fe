@@ -26,7 +26,6 @@ import {
   SearchOutlined,
   AppstoreOutlined,
   TableOutlined,
-  FilterOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import PageHeader from "src/components/PageHeader";
@@ -34,20 +33,24 @@ import ListingTable from "src/components/ListingTable";
 import TransactionForm from "./TransactionForm";
 import CategoryDrawer from "./CategoryDrawer";
 import api from "src/pkg/api";
-import { formatRupiah } from "src/pkg/helper";
+import { formatRupiah, getFinancialMonthRange } from "src/pkg/helper";
 import { useDashboard } from "src/context/DashboardContext";
 
 export default function TransactionPage() {
   const { message } = App.useApp();
-  const { isPrivacyMode } = useDashboard();
+  const { isPrivacyMode, cycleStartDay } = useDashboard();
 
   // Date & Period Filter
   const [filterType, setFilterType] = useState("month"); // "week" | "month" | "year" | "range" | "all"
   const [selectedDate, setSelectedDate] = useState(dayjs());
-  const [selectedRange, setSelectedRange] = useState([
-    dayjs().startOf("month"),
-    dayjs().endOf("month"),
-  ]);
+  const [selectedRange, setSelectedRange] = useState(() => {
+    const range = getFinancialMonthRange(cycleStartDay || 1, dayjs());
+    return [dayjs(range.startDate), dayjs(range.endDate)];
+  });
+
+  const financialMonthInfo = useMemo(() => {
+    return getFinancialMonthRange(cycleStartDay || 1, selectedDate);
+  }, [cycleStartDay, selectedDate]);
 
   // Search, Type, & Sort Filters (Works on both Mobile & Desktop)
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -68,13 +71,26 @@ export default function TransactionPage() {
   const extraParams = useMemo(() => {
     const params = {};
     if (filterType !== "all") {
-      params.filter_type = filterType;
       if (filterType === "range") {
+        params.filter_type = "range";
         if (selectedRange && selectedRange[0] && selectedRange[1]) {
           params.start_date = selectedRange[0].format("YYYY-MM-DD");
           params.end_date = selectedRange[1].format("YYYY-MM-DD");
         }
+      } else if (filterType === "month") {
+        // If user has a custom cycle start day (> 1), send range with calculated cycle dates
+        if (cycleStartDay > 1) {
+          params.filter_type = "range";
+          params.start_date = financialMonthInfo.startDate;
+          params.end_date = financialMonthInfo.endDate;
+        } else {
+          params.filter_type = "month";
+          params.date = selectedDate
+            ? selectedDate.format("YYYY-MM-DD")
+            : dayjs().format("YYYY-MM-DD");
+        }
       } else {
+        params.filter_type = filterType;
         params.date = selectedDate
           ? selectedDate.format("YYYY-MM-DD")
           : dayjs().format("YYYY-MM-DD");
@@ -95,7 +111,7 @@ export default function TransactionPage() {
     }
 
     return params;
-  }, [filterType, selectedDate, selectedRange, searchKeyword, transactionType, sortOption]);
+  }, [filterType, selectedDate, selectedRange, searchKeyword, transactionType, sortOption, cycleStartDay, financialMonthInfo]);
 
   const fetchSummaryStats = async () => {
     try {
@@ -701,18 +717,34 @@ export default function TransactionPage() {
                 }}
               />
             ) : (
-              <DatePicker
-                picker={filterType}
-                value={selectedDate}
-                onChange={(date) => setSelectedDate(date)}
-                allowClear={false}
-                style={{
-                  width: isMobile ? "100%" : 150,
-                  background: "#0D1117",
-                  borderColor: "#21262D",
-                  borderRadius: 8,
-                }}
-              />
+              <Space wrap size={8} style={{ width: isMobile ? "100%" : "auto" }}>
+                <DatePicker
+                  picker={filterType}
+                  value={selectedDate}
+                  onChange={(date) => setSelectedDate(date)}
+                  allowClear={false}
+                  style={{
+                    width: isMobile ? "100%" : 150,
+                    background: "#0D1117",
+                    borderColor: "#21262D",
+                    borderRadius: 8,
+                  }}
+                />
+                {filterType === "month" && cycleStartDay > 1 && (
+                  <Tag
+                    color="blue"
+                    style={{
+                      borderRadius: 6,
+                      padding: "3px 8px",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      margin: 0,
+                    }}
+                  >
+                    {financialMonthInfo.label}
+                  </Tag>
+                )}
+              </Space>
             ))}
         </div>
 

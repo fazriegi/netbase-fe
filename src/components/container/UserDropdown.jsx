@@ -2,7 +2,6 @@ import React from "react";
 import {
   LogoutOutlined,
   SettingOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import { Avatar, Dropdown, Space, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -17,11 +16,6 @@ export default function UserDropdown() {
   const user = storedUser || {};
 
   const items = [
-    {
-      key: "profile",
-      icon: <UserOutlined />,
-      label: "Profile",
-    },
     {
       key: "settings",
       icon: <SettingOutlined />,

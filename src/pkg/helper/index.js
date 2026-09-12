@@ -27,3 +27,5 @@ export function formatRupiah(amount, isPrivacy = false, withSign = false) {
     }
     return `Rp ${formatted}`;
 }
+
+export * from "./date";
