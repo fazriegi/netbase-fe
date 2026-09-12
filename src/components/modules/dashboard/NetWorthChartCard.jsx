@@ -169,6 +169,10 @@ export default function NetWorthChartCard({
   } else if (currentNetWorth !== 0 && currentNetWorth - changeAmount !== 0) {
     const prevVal = Math.abs(currentNetWorth - changeAmount);
     numPercentage = (changeAmount / prevVal) * 100;
+  } else if (changeAmount > 0) {
+    numPercentage = 100;
+  } else if (changeAmount < 0) {
+    numPercentage = -100;
   }
 
   // Determine negative/positive state strictly from numerical values
@@ -184,23 +188,25 @@ export default function NetWorthChartCard({
 
   // Build dynamic adaptive label
   const formattedNominal = formatRupiah(changeAmount, isPrivacyMode, isPositive);
+  const absPct = Math.abs(numPercentage);
+  const formattedVal =
+    absPct >= 99.95 && absPct < 100 ? absPct.toFixed(2) : absPct.toFixed(1);
+
   const formattedPercent =
     numPercentage > 9999
       ? "> +9999%"
       : numPercentage < -9999
         ? "< -9999%"
         : numPercentage > 0
-          ? `+${numPercentage.toFixed(1)}%`
+          ? `+${formattedVal}%`
           : isNegative
-            ? `${numPercentage < 0 ? numPercentage.toFixed(1) : `-${numPercentage.toFixed(1)}`}%`
+            ? `-${formattedVal}%`
             : "0.0%";
 
   const timeframeLabel =
-    selectedTimeframe === "1M"
-      ? "vs last month"
-      : selectedTimeframe === "ALL"
-        ? "all time"
-        : `in ${selectedTimeframe}`;
+    selectedTimeframe === "ALL"
+      ? "all time"
+      : `in ${selectedTimeframe}`;
 
   const changeDisplayText = `${formattedNominal} (${formattedPercent}) ${timeframeLabel}`;
 
@@ -420,141 +426,141 @@ export default function NetWorthChartCard({
       <Spin spinning={chartLoading} style={{ width: "100%" }}>
         <div style={{ width: "100%", height: isMobile ? 240 : 320, minHeight: isMobile ? 240 : 320 }}>
           {data && data.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={data}
-              margin={{
-                top: 10,
-                right: isMobile ? 8 : 20,
-                left: isMobile ? 2 : 10,
-                bottom: 0,
-              }}
-            >
-              <defs>
-                {/* Dynamic Dual color gradient fill */}
-                <linearGradient id="splitFill" x1="0" y1="0" x2="0" y2="1">
-                  {yMax <= 0 ? (
-                    <>
-                      <stop offset="0%" stopColor="#EF4444" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#EF4444" stopOpacity={0.03} />
-                    </>
-                  ) : yMin >= 0 ? (
-                    <>
-                      <stop offset="0%" stopColor="#10B981" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#10B981" stopOpacity={0.03} />
-                    </>
-                  ) : (
-                    <>
-                      <stop offset="0%" stopColor="#10B981" stopOpacity={0.4} />
-                      <stop offset={`${Math.round(off * 100)}%`} stopColor="#06B6D4" stopOpacity={0.08} />
-                      <stop offset={`${Math.round(off * 100)}%`} stopColor="#EF4444" stopOpacity={0.08} />
-                      <stop offset="100%" stopColor="#EF4444" stopOpacity={0.4} />
-                    </>
-                  )}
-                </linearGradient>
-
-                {/* Spline line stroke gradient */}
-                <linearGradient id="splitStroke" x1="0" y1="0" x2="0" y2="1">
-                  {yMax <= 0 ? (
-                    <>
-                      <stop offset="0%" stopColor="#F87171" />
-                      <stop offset="100%" stopColor="#EF4444" />
-                    </>
-                  ) : yMin >= 0 ? (
-                    <>
-                      <stop offset="0%" stopColor="#10B981" />
-                      <stop offset="100%" stopColor="#34D399" />
-                    </>
-                  ) : (
-                    <>
-                      <stop offset="0%" stopColor="#10B981" />
-                      <stop offset={`${Math.round(off * 100)}%`} stopColor="#38BDF8" />
-                      <stop offset={`${Math.round(off * 100)}%`} stopColor="#F59E0B" />
-                      <stop offset="100%" stopColor="#EF4444" />
-                    </>
-                  )}
-                </linearGradient>
-              </defs>
-
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#6E7681", fontSize: 11 }}
-                dy={8}
-                interval="preserveStartEnd"
-                minTickGap={28}
-              />
-
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                domain={[yMin, yMax]}
-                ticks={ticks}
-                width={isMobile ? 64 : 74}
-                tick={{ fill: "#6E7681", fontSize: isMobile ? 10 : 11 }}
-                tickFormatter={(val) => {
-                  if (isPrivacyMode) return "•••";
-                  if (val === 0) return "Rp\u00A00";
-                  const abs = Math.abs(val);
-                  const sign = val < 0 ? "-" : "";
-                  if (abs >= 1000000000000) {
-                    const num = (abs / 1000000000000) % 1 === 0 ? abs / 1000000000000 : parseFloat((abs / 1000000000000).toFixed(2));
-                    return `${sign}Rp\u00A0${num}T`;
-                  }
-                  if (abs >= 1000000000) {
-                    const num = (abs / 1000000000) % 1 === 0 ? abs / 1000000000 : parseFloat((abs / 1000000000).toFixed(2));
-                    return `${sign}Rp\u00A0${num}B`;
-                  }
-                  if (abs >= 1000000) {
-                    const num = (abs / 1000000) % 1 === 0 ? abs / 1000000 : parseFloat((abs / 1000000).toFixed(2));
-                    return `${sign}Rp\u00A0${num}M`;
-                  }
-                  if (abs >= 1000) {
-                    const num = (abs / 1000) % 1 === 0 ? abs / 1000 : parseFloat((abs / 1000).toFixed(2));
-                    return `${sign}Rp\u00A0${num}K`;
-                  }
-                  return `${sign}Rp\u00A0${abs}`;
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={data}
+                margin={{
+                  top: 10,
+                  right: isMobile ? 8 : 20,
+                  left: isMobile ? 2 : 10,
+                  bottom: 0,
                 }}
-              />
+              >
+                <defs>
+                  {/* Dynamic Dual color gradient fill */}
+                  <linearGradient id="splitFill" x1="0" y1="0" x2="0" y2="1">
+                    {yMax <= 0 ? (
+                      <>
+                        <stop offset="0%" stopColor="#EF4444" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#EF4444" stopOpacity={0.03} />
+                      </>
+                    ) : yMin >= 0 ? (
+                      <>
+                        <stop offset="0%" stopColor="#10B981" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#10B981" stopOpacity={0.03} />
+                      </>
+                    ) : (
+                      <>
+                        <stop offset="0%" stopColor="#10B981" stopOpacity={0.4} />
+                        <stop offset={`${Math.round(off * 100)}%`} stopColor="#06B6D4" stopOpacity={0.08} />
+                        <stop offset={`${Math.round(off * 100)}%`} stopColor="#EF4444" stopOpacity={0.08} />
+                        <stop offset="100%" stopColor="#EF4444" stopOpacity={0.4} />
+                      </>
+                    )}
+                  </linearGradient>
 
-              {/* Zero Break-Even Reference Line */}
-              <ReferenceLine
-                y={0}
-                stroke="#485260"
-                strokeDasharray="4 4"
-                strokeWidth={1.2}
-                label={{
-                  value: "Break-Even (Rp 0)",
-                  fill: "#8B949E",
-                  position: "insideTopLeft",
-                  fontSize: 11,
-                  fontWeight: 500,
-                  offset: 8,
-                }}
-              />
+                  {/* Spline line stroke gradient */}
+                  <linearGradient id="splitStroke" x1="0" y1="0" x2="0" y2="1">
+                    {yMax <= 0 ? (
+                      <>
+                        <stop offset="0%" stopColor="#F87171" />
+                        <stop offset="100%" stopColor="#EF4444" />
+                      </>
+                    ) : yMin >= 0 ? (
+                      <>
+                        <stop offset="0%" stopColor="#10B981" />
+                        <stop offset="100%" stopColor="#34D399" />
+                      </>
+                    ) : (
+                      <>
+                        <stop offset="0%" stopColor="#10B981" />
+                        <stop offset={`${Math.round(off * 100)}%`} stopColor="#38BDF8" />
+                        <stop offset={`${Math.round(off * 100)}%`} stopColor="#F59E0B" />
+                        <stop offset="100%" stopColor="#EF4444" />
+                      </>
+                    )}
+                  </linearGradient>
+                </defs>
 
-              <Tooltip
-                content={<CustomChartTooltip isPrivacyMode={isPrivacyMode} />}
-                cursor={{ stroke: "#30363D", strokeWidth: 1, strokeDasharray: "3 3" }}
-              />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#6E7681", fontSize: 11 }}
+                  dy={8}
+                  interval="preserveStartEnd"
+                  minTickGap={28}
+                />
 
-              <Area
-                type="monotone"
-                dataKey="netWorth"
-                stroke="url(#splitStroke)"
-                strokeWidth={2.5}
-                fill="url(#splitFill)"
-                activeDot={{
-                  r: 6,
-                  fill: "#FFFFFF",
-                  stroke: "#38BDF8",
-                  strokeWidth: 2,
-                  boxShadow: "0 0 10px #38BDF8",
-                }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  domain={[yMin, yMax]}
+                  ticks={ticks}
+                  width={isMobile ? 64 : 74}
+                  tick={{ fill: "#6E7681", fontSize: isMobile ? 10 : 11 }}
+                  tickFormatter={(val) => {
+                    if (isPrivacyMode) return "•••";
+                    if (val === 0) return "Rp\u00A00";
+                    const abs = Math.abs(val);
+                    const sign = val < 0 ? "-" : "";
+                    if (abs >= 1000000000000) {
+                      const num = (abs / 1000000000000) % 1 === 0 ? abs / 1000000000000 : parseFloat((abs / 1000000000000).toFixed(2));
+                      return `${sign}Rp\u00A0${num}T`;
+                    }
+                    if (abs >= 1000000000) {
+                      const num = (abs / 1000000000) % 1 === 0 ? abs / 1000000000 : parseFloat((abs / 1000000000).toFixed(2));
+                      return `${sign}Rp\u00A0${num}B`;
+                    }
+                    if (abs >= 1000000) {
+                      const num = (abs / 1000000) % 1 === 0 ? abs / 1000000 : parseFloat((abs / 1000000).toFixed(2));
+                      return `${sign}Rp\u00A0${num}M`;
+                    }
+                    if (abs >= 1000) {
+                      const num = (abs / 1000) % 1 === 0 ? abs / 1000 : parseFloat((abs / 1000).toFixed(2));
+                      return `${sign}Rp\u00A0${num}K`;
+                    }
+                    return `${sign}Rp\u00A0${abs}`;
+                  }}
+                />
+
+                {/* Zero Break-Even Reference Line */}
+                <ReferenceLine
+                  y={0}
+                  stroke="#485260"
+                  strokeDasharray="4 4"
+                  strokeWidth={1.2}
+                  label={{
+                    value: "Break-Even (Rp 0)",
+                    fill: "#8B949E",
+                    position: "insideTopLeft",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    offset: 8,
+                  }}
+                />
+
+                <Tooltip
+                  content={<CustomChartTooltip isPrivacyMode={isPrivacyMode} />}
+                  cursor={{ stroke: "#30363D", strokeWidth: 1, strokeDasharray: "3 3" }}
+                />
+
+                <Area
+                  type="monotone"
+                  dataKey="netWorth"
+                  stroke="url(#splitStroke)"
+                  strokeWidth={2.5}
+                  fill="url(#splitFill)"
+                  activeDot={{
+                    r: 6,
+                    fill: "#FFFFFF",
+                    stroke: "#38BDF8",
+                    strokeWidth: 2,
+                    boxShadow: "0 0 10px #38BDF8",
+                  }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           ) : chartLoading ? null : (
             <div
               style={{
