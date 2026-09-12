@@ -86,19 +86,26 @@ jobs:
             echo "Authenticating with GitHub Container Registry..."
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
+            echo "Writing production compose configuration..."
+            echo 'services:
+              web:
+                image: ghcr.io/${{ github.repository }}:latest
+                container_name: netbase-fe
+                restart: always
+                environment:
+                  TZ: Asia/Jakarta
+                ports:
+                  - "127.0.0.1:${PORT:-3000}:80"' > docker-compose.prod.yml
+
             echo "Pulling latest Docker image..."
-            if [ -f docker-compose.prod.yml ]; then
-              docker compose -f docker-compose.prod.yml pull
-              docker compose -f docker-compose.prod.yml up -d --remove-orphans
-            elif [ -f docker-compose.yml ]; then
-              docker compose pull
-              docker compose up -d --remove-orphans
-            else
-              docker pull ghcr.io/${{ github.repository }}:latest
-              docker stop netbase-fe || true
-              docker rm netbase-fe || true
-              docker run -d --name netbase-fe --restart always -p 127.0.0.1:3000:80 ghcr.io/${{ github.repository }}:latest
-            fi
+            docker compose -f docker-compose.prod.yml pull
+
+            echo "Stopping old container if exists..."
+            docker stop netbase-fe 2>/dev/null || true
+            docker rm netbase-fe 2>/dev/null || true
+
+            echo "Deploying container..."
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
             echo "Cleaning up dangling images..."
             docker image prune -f
