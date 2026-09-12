@@ -100,8 +100,12 @@ jobs:
             echo "Pulling latest Docker image..."
             docker compose -f docker-compose.prod.yml pull
 
+            echo "Stopping old container if exists..."
+            docker stop netbase-fe 2>/dev/null || true
+            docker rm netbase-fe 2>/dev/null || true
+
             echo "Deploying container..."
-            docker compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
             echo "Cleaning up dangling images..."
             docker image prune -f
