@@ -95,7 +95,7 @@ jobs:
                 environment:
                   TZ: Asia/Jakarta
                 ports:
-                  - "127.0.0.1:${PORT:-3000}:80"' > docker-compose.prod.yml
+                  - "127.0.0.1:${{ vars.PORT || '3000' }}:80"' > docker-compose.prod.yml
 
             echo "Pulling latest Docker image..."
             docker compose -f docker-compose.prod.yml pull
