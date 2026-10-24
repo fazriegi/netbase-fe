@@ -419,14 +419,12 @@ export default function SetMilestoneModal({
               htmlType="submit"
               icon={<RocketOutlined />}
               style={{
-                background:
-                  "linear-gradient(135deg, #06B6D4 0%, #10B981 100%)",
+                background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
                 border: "none",
                 color: "#FFFFFF",
-                fontWeight: 700,
+                fontWeight: 600,
                 height: 38,
                 borderRadius: 8,
-                boxShadow: "0 0 12px rgba(6, 182, 212, 0.4)",
               }}
             >
               Save Milestone

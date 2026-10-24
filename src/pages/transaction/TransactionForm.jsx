@@ -6,11 +6,11 @@ import {
   DatePicker,
   Select,
   Radio,
-  Space,
   Input,
   Checkbox,
   App,
 } from "antd";
+import { SaveOutlined } from "@ant-design/icons";
 import InputNumeric from "src/components/input/InputNumeric";
 import api from "src/pkg/api";
 import { formatRupiah } from "src/pkg/helper";
@@ -62,9 +62,9 @@ export default function TransactionForm({
   // Was this transaction originally linked to this asset AND updated its balance?
   const wasBalanceUpdatedForThisAsset = Boolean(
     originalTx &&
-      oldUpdateBalance &&
-      originalTx.asset_id &&
-      originalTx.asset_id === selectedAssetId,
+    oldUpdateBalance &&
+    originalTx.asset_id &&
+    originalTx.asset_id === selectedAssetId,
   );
 
   // Baseline asset value before original transaction effect
@@ -90,16 +90,16 @@ export default function TransactionForm({
   );
   const liabRemainingVal = Number(
     selectedLiability?.remaining_balance ??
-      selectedLiability?.principal_amount ??
-      0,
+    selectedLiability?.principal_amount ??
+    0,
   );
 
   // Was this transaction originally linked to this liability AND updated its balance?
   const wasBalanceUpdatedForThisLiability = Boolean(
     originalTx &&
-      oldUpdateBalance &&
-      originalTx.liability_id &&
-      originalTx.liability_id === selectedLiabilityId,
+    oldUpdateBalance &&
+    originalTx.liability_id &&
+    originalTx.liability_id === selectedLiabilityId,
   );
 
   // Baseline liability value before original transaction effect
@@ -263,15 +263,36 @@ export default function TransactionForm({
       destroyOnClose
       footer={
         <div
-          style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}
+          style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}
         >
-          <Button onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={onClose}
+            style={{
+              background: "#21262D",
+              borderColor: "#30363D",
+              color: "#C9D1D9",
+              height: 40,
+              borderRadius: 8,
+              padding: "0 20px",
+            }}
+          >
+            Cancel
+          </Button>
           <Button
             type="primary"
+            icon={<SaveOutlined />}
             onClick={() => form.submit()}
             loading={submitting}
+            style={{
+              height: 40,
+              padding: "0 24px",
+              borderRadius: 8,
+              fontWeight: 600,
+              background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
+              border: "none",
+            }}
           >
-            Save
+            Save Transaction
           </Button>
         </div>
       }
@@ -466,11 +487,10 @@ export default function TransactionForm({
                     background: isExpense
                       ? "rgba(16, 185, 129, 0.08)"
                       : "rgba(56, 189, 248, 0.08)",
-                    border: `1px solid ${
-                      isExpense
-                        ? "rgba(16, 185, 129, 0.2)"
-                        : "rgba(56, 189, 248, 0.2)"
-                    }`,
+                    border: `1px solid ${isExpense
+                      ? "rgba(16, 185, 129, 0.2)"
+                      : "rgba(56, 189, 248, 0.2)"
+                      }`,
                     borderRadius: 6,
                     padding: "4px 8px",
                     marginTop: 6,
@@ -503,8 +523,8 @@ export default function TransactionForm({
                               diffAssetBalance > 0
                                 ? "#10B981"
                                 : diffAssetBalance < 0
-                                ? "#EF4444"
-                                : "#F0F6FC",
+                                  ? "#EF4444"
+                                  : "#F0F6FC",
                             marginRight: 6,
                           }}
                         >
@@ -517,15 +537,15 @@ export default function TransactionForm({
                               diffAssetBalance > 0
                                 ? "#10B981"
                                 : diffAssetBalance < 0
-                                ? "#EF4444"
-                                : "#8B949E",
+                                  ? "#EF4444"
+                                  : "#8B949E",
                           }}
                         >
                           {diffAssetBalance === 0
                             ? "(No change)"
                             : `(${diffAssetBalance > 0 ? "+" : "-"}${formatRupiah(
-                                Math.abs(diffAssetBalance),
-                              )})`}
+                              Math.abs(diffAssetBalance),
+                            )})`}
                         </span>
                       </div>
                     </div>
@@ -654,11 +674,10 @@ export default function TransactionForm({
                     background: isExpense
                       ? "rgba(16, 185, 129, 0.08)"
                       : "rgba(245, 158, 11, 0.08)",
-                    border: `1px solid ${
-                      isExpense
-                        ? "rgba(16, 185, 129, 0.2)"
-                        : "rgba(245, 158, 11, 0.2)"
-                    }`,
+                    border: `1px solid ${isExpense
+                      ? "rgba(16, 185, 129, 0.2)"
+                      : "rgba(245, 158, 11, 0.2)"
+                      }`,
                     borderRadius: 6,
                     padding: "4px 8px",
                     marginTop: 6,
@@ -691,8 +710,8 @@ export default function TransactionForm({
                               diffLiabilityBalance < 0
                                 ? "#10B981"
                                 : diffLiabilityBalance > 0
-                                ? "#F59E0B"
-                                : "#F0F6FC",
+                                  ? "#F59E0B"
+                                  : "#F0F6FC",
                             marginRight: 6,
                           }}
                         >
@@ -705,15 +724,15 @@ export default function TransactionForm({
                               diffLiabilityBalance < 0
                                 ? "#10B981"
                                 : diffLiabilityBalance > 0
-                                ? "#F59E0B"
-                                : "#8B949E",
+                                  ? "#F59E0B"
+                                  : "#8B949E",
                           }}
                         >
                           {diffLiabilityBalance === 0
                             ? "(No change)"
                             : `(${diffLiabilityBalance > 0 ? "+" : "-"}${formatRupiah(
-                                Math.abs(diffLiabilityBalance),
-                              )})`}
+                              Math.abs(diffLiabilityBalance),
+                            )})`}
                         </span>
                       </div>
                     </div>

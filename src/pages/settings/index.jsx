@@ -327,6 +327,8 @@ export default function SettingsPage() {
                   height: 40,
                   padding: "0 24px",
                   borderRadius: 8,
+                  fontWeight: 600,
+                  border: "none",
                   alignSelf: isMobile ? "stretch" : "flex-end",
                   background: selectedDay === cycleStartDay ? undefined : "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
                 }}

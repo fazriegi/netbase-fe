@@ -773,11 +773,10 @@ export default function TransactionPage() {
             type="primary"
             style={{
               flex: isMobile ? 1 : "none",
-              background: "linear-gradient(90deg, #2563EB 0%, #38BDF8 100%)",
+              background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
               border: "none",
               borderRadius: 8,
               fontWeight: 600,
-              boxShadow: "0 0 10px rgba(37, 99, 235, 0.4)",
             }}
             icon={<PlusOutlined />}
             onClick={() => {
