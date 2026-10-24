@@ -99,7 +99,6 @@ export default function TransactionPage() {
 
     if (searchKeyword && searchKeyword.trim()) {
       params.search = searchKeyword.trim();
-      params.category_name = searchKeyword.trim();
     }
 
     if (transactionType !== "all") {
@@ -810,7 +809,7 @@ export default function TransactionPage() {
         <div style={{ flex: 1, minWidth: isMobile ? "100%" : 220 }}>
           <Input
             prefix={<SearchOutlined style={{ color: "#8B949E" }} />}
-            placeholder="Search category, notes..."
+            placeholder="Search category/notes/asset/liability"
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             allowClear
