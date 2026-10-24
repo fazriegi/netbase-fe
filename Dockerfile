@@ -1,7 +1,7 @@
 # ==========================================
 # BUILDER STAGE
 # ==========================================
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -24,6 +24,8 @@ RUN npm run build
 # RUNNER STAGE
 # ==========================================
 FROM nginx:stable-alpine
+
+RUN apk upgrade --no-cache
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
