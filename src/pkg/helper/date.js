@@ -76,25 +76,29 @@ export function getFinancialMonthRange(cycleStartDay = 1, referenceDate = dayjs(
   }
 
   // Case 2: Custom cycle (day > 1)
-  // For target month (ref), Start Month is previous month, End Month is target month
-  // E.g., for June 2026 with cycleStartDay=27:
-  // Start: 27 May 2026
-  // End: 26 June 2026
   const targetYear = ref.year();
   const targetMonth = ref.month(); // 0-indexed in dayjs
+  const refDay = ref.date();
 
-  const prevMonthDate = dayjs(new Date(targetYear, targetMonth - 1, 1));
-  const currMonthDate = dayjs(new Date(targetYear, targetMonth, 1));
+  let startMonthDate, endMonthDate;
 
-  // Clamping start day with number of days in previous month
-  const daysInPrev = prevMonthDate.daysInMonth();
-  const actualStartDay = Math.min(day, daysInPrev);
-  const startDate = prevMonthDate.date(actualStartDay);
+  if (refDay >= day) {
+    startMonthDate = dayjs(new Date(targetYear, targetMonth, 1));
+    endMonthDate = dayjs(new Date(targetYear, targetMonth + 1, 1));
+  } else {
+    startMonthDate = dayjs(new Date(targetYear, targetMonth - 1, 1));
+    endMonthDate = dayjs(new Date(targetYear, targetMonth, 1));
+  }
 
-  // Clamping end day (day - 1) with number of days in current month
-  const daysInCurr = currMonthDate.daysInMonth();
-  const actualEndDay = Math.min(day - 1, daysInCurr);
-  const endDate = currMonthDate.date(actualEndDay);
+  // Clamping start day with number of days in start month
+  const daysInStart = startMonthDate.daysInMonth();
+  const actualStartDay = Math.min(day, daysInStart);
+  const startDate = startMonthDate.date(actualStartDay);
+
+  // Clamping end day (day - 1) with number of days in end month
+  const daysInEnd = endMonthDate.daysInMonth();
+  const actualEndDay = Math.min(day - 1, daysInEnd);
+  const endDate = endMonthDate.date(actualEndDay);
 
   return {
     startDate: startDate.format("YYYY-MM-DD"),

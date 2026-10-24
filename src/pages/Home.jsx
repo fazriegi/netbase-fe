@@ -9,7 +9,6 @@ import CashflowCard from "src/components/modules/dashboard/CashflowCard";
 import UpcomingDueDatesCard from "src/components/modules/dashboard/UpcomingDueDatesCard";
 import { useDashboard } from "src/context/DashboardContext";
 import api from "src/pkg/api";
-import moment from "moment";
 
 export default function Home() {
   const { message } = AntdApp.useApp();
@@ -69,8 +68,7 @@ export default function Home() {
 
   const fetchCashflowData = useCallback(async () => {
     try {
-      const period = moment().format("YYYY-MM");
-      const response = await api.get(`/v1/dashboard/cashflow?period=${period}`);
+      const response = await api.get(`/v1/dashboard/cashflow`);
       const respBody = response?.data;
       if (respBody?.is_success && respBody?.data) {
         setDashboardData((prev) => ({
