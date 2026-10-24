@@ -178,7 +178,7 @@ export default function MilestoneTracker({
             icon={<PlusOutlined />}
             onClick={() => setIsModalOpen(true)}
             style={{
-              background: "linear-gradient(90deg, #2563EB 0%, #38BDF8 100%)",
+              background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
               border: "none",
               color: "#FFFFFF",
               fontWeight: 600,
@@ -186,7 +186,6 @@ export default function MilestoneTracker({
               borderRadius: 6,
               height: 26,
               padding: "0 10px",
-              boxShadow: "0 0 8px rgba(37, 99, 235, 0.4)",
               flexShrink: 0,
             }}
           >
@@ -266,14 +265,13 @@ export default function MilestoneTracker({
             icon={<PlusOutlined />}
             onClick={() => setIsModalOpen(true)}
             style={{
-              background: "linear-gradient(90deg, #06B6D4 0%, #10B981 100%)",
+              background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
               border: "none",
               color: "#FFFFFF",
-              fontWeight: 700,
+              fontWeight: 600,
               fontSize: 11,
               borderRadius: 6,
               height: 28,
-              boxShadow: "0 0 8px rgba(6, 182, 212, 0.4)",
               width: "100%",
             }}
           >

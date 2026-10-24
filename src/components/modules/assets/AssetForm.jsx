@@ -112,6 +112,7 @@ export default function AssetForm({
               form={form}
               initialValues={{
                 is_active: true,
+                current_value: 0,
               }}
             >
               <div>
@@ -147,9 +148,25 @@ export default function AssetForm({
                 <Form.Item
                   label="Current Value"
                   name="current_value"
-                  rules={[{ required: true, message: "Please enter current value" }]}
+                  rules={[
+                    {
+                      required: true,
+                      validator: (_, value) => {
+                        if (value === undefined || value === null || value === "") {
+                          return Promise.reject(new Error("Please enter current value"));
+                        }
+
+                        if (Number(value) < 0) {
+                          return Promise.reject(new Error("Current value cannot be negative"));
+                        }
+
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
+
                 >
-                  <InputNumeric useCurrency />
+                  <InputNumeric useCurrency min={0} placeholder="0" />
                 </Form.Item>
 
                 <Form.Item
@@ -337,10 +354,9 @@ export default function AssetForm({
                       minWidth: isMobile ? "auto" : 140,
                       height: 40,
                       borderRadius: 8,
-                      fontWeight: 700,
-                      background: "linear-gradient(90deg, #2563EB 0%, #38BDF8 100%)",
+                      fontWeight: 600,
+                      background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
                       border: "none",
-                      boxShadow: "0 0 12px rgba(37, 99, 235, 0.4)",
                     }}
                   >
                     Save Asset

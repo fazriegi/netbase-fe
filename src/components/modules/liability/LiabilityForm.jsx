@@ -372,10 +372,9 @@ export default function LiabilityForm({
                       minWidth: isMobile ? "auto" : 140,
                       height: 40,
                       borderRadius: 8,
-                      fontWeight: 700,
-                      background: "linear-gradient(90deg, #2563EB 0%, #38BDF8 100%)",
+                      fontWeight: 600,
+                      background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
                       border: "none",
-                      boxShadow: "0 0 12px rgba(37, 99, 235, 0.4)",
                     }}
                   >
                     Save Liability

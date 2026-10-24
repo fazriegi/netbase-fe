@@ -3,7 +3,7 @@ import { CURRENCY } from "src/pkg/constant";
 
 const InputNumeric = ({
   label = "",
-  defaultValue = 0,
+  defaultValue,
   inputStyle = {},
   labelUp = false,
   useCurrency = false,
