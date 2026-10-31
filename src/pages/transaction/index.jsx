@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Button,
   Card,
@@ -26,14 +26,20 @@ import {
   SearchOutlined,
   AppstoreOutlined,
   TableOutlined,
+  UnorderedListOutlined,
+  PieChartOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import isoWeek from "dayjs/plugin/isoWeek";
 import PageHeader from "src/components/PageHeader";
+
+dayjs.extend(isoWeek);
 import ListingTable from "src/components/ListingTable";
 import TransactionForm from "./TransactionForm";
 import CategoryDrawer from "./CategoryDrawer";
+import CashflowAllocationCard from "src/components/modules/cashflow/CashflowAllocationCard";
 import api from "src/pkg/api";
-import { formatRupiah, getFinancialMonthRange } from "src/pkg/helper";
+import { formatRupiah, formatCycleRangeLabel, getFinancialMonthRange } from "src/pkg/helper";
 import { useDashboard } from "src/context/DashboardContext";
 
 export default function TransactionPage() {
@@ -52,6 +58,20 @@ export default function TransactionPage() {
     return getFinancialMonthRange(cycleStartDay || 1, selectedDate);
   }, [cycleStartDay, selectedDate]);
 
+  const periodBadgeLabel = useMemo(() => {
+    if (filterType === "week") {
+      const d = selectedDate && dayjs(selectedDate).isValid() ? dayjs(selectedDate) : dayjs();
+      return formatCycleRangeLabel(d.startOf("isoWeek"), d.endOf("isoWeek"));
+    }
+    if (filterType === "month" && cycleStartDay > 1) {
+      return financialMonthInfo.label;
+    }
+    return "";
+  }, [filterType, selectedDate, cycleStartDay, financialMonthInfo]);
+
+  // Active Page Tab ("transactions" | "allocation")
+  const [activeTab, setActiveTab] = useState("transactions");
+
   // Search, Type, & Sort Filters (Works on both Mobile & Desktop)
   const [searchKeyword, setSearchKeyword] = useState("");
   const [transactionType, setTransactionType] = useState("all"); // "all" | "income" | "expense"
@@ -68,7 +88,7 @@ export default function TransactionPage() {
   const screens = Grid.useBreakpoint();
   const isMobile = screens.sm === false;
 
-  const extraParams = useMemo(() => {
+  const periodParams = useMemo(() => {
     const params = {};
     if (filterType !== "all") {
       if (filterType === "range") {
@@ -96,6 +116,11 @@ export default function TransactionPage() {
           : dayjs().format("YYYY-MM-DD");
       }
     }
+    return params;
+  }, [filterType, selectedDate, selectedRange, cycleStartDay, financialMonthInfo]);
+
+  const extraParams = useMemo(() => {
+    const params = { ...periodParams };
 
     if (searchKeyword && searchKeyword.trim()) {
       params.search = searchKeyword.trim();
@@ -110,13 +135,21 @@ export default function TransactionPage() {
     }
 
     return params;
-  }, [filterType, selectedDate, selectedRange, searchKeyword, transactionType, sortOption, cycleStartDay, financialMonthInfo]);
+  }, [periodParams, searchKeyword, transactionType, sortOption]);
 
-  const fetchSummaryStats = async () => {
+  const summaryParams = useMemo(() => {
+    const params = { ...periodParams };
+    if (activeTab === "transactions" && searchKeyword && searchKeyword.trim()) {
+      params.search = searchKeyword.trim();
+    }
+    return params;
+  }, [periodParams, activeTab, searchKeyword]);
+
+  const summaryParamsKey = JSON.stringify(summaryParams);
+
+  const fetchSummaryStats = useCallback(async () => {
     try {
-      const params = {
-        ...extraParams,
-      };
+      const params = JSON.parse(summaryParamsKey);
       const res = await api.get("/v1/transactions/summary", { params });
       const summary = res.data?.data || { income: 0, expense: 0, net: 0 };
 
@@ -128,11 +161,11 @@ export default function TransactionPage() {
     } catch (err) {
       console.error("Failed to load summary statistics:", err);
     }
-  };
+  }, [summaryParamsKey]);
 
   useEffect(() => {
     fetchSummaryStats();
-  }, [JSON.stringify(extraParams), refreshTrigger]);
+  }, [fetchSummaryStats, refreshTrigger]);
 
   const handleEdit = (id) => {
     setSelectedTxId(id);
@@ -716,34 +749,46 @@ export default function TransactionPage() {
                 }}
               />
             ) : (
-              <Space wrap size={8} style={{ width: isMobile ? "100%" : "auto" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: isMobile ? "100%" : "auto",
+                }}
+              >
                 <DatePicker
                   picker={filterType}
                   value={selectedDate}
                   onChange={(date) => setSelectedDate(date)}
                   allowClear={false}
                   style={{
-                    width: isMobile ? "100%" : 150,
+                    flex: isMobile ? 1 : "none",
+                    width: isMobile ? "auto" : 150,
+                    minWidth: 0,
                     background: "#0D1117",
                     borderColor: "#21262D",
                     borderRadius: 8,
                   }}
                 />
-                {filterType === "month" && cycleStartDay > 1 && (
+                {periodBadgeLabel && (
                   <Tag
-                    color="blue"
                     style={{
-                      borderRadius: 6,
-                      padding: "3px 8px",
-                      fontSize: 12,
-                      fontWeight: 600,
                       margin: 0,
+                      flexShrink: 0,
+                      background: "rgba(56, 189, 248, 0.1)",
+                      border: "1px solid rgba(56, 189, 248, 0.25)",
+                      color: "#38BDF8",
+                      borderRadius: 20,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: "2px 10px",
                     }}
                   >
-                    {financialMonthInfo.label}
+                    {periodBadgeLabel}
                   </Tag>
                 )}
-              </Space>
+              </div>
             ))}
         </div>
 
@@ -789,106 +834,175 @@ export default function TransactionPage() {
         </div>
       </div>
 
-      {/* Secondary Filter Bar: Search, Type Filter, Sort, & View Toggle */}
+      {/* View Tab Bar: Transactions vs Allocation */}
       <div
         style={{
-          background: "#161B22",
-          border: "1px solid #21262D",
-          borderRadius: 14,
-          padding: isMobile ? "10px" : "10px 16px",
           display: "flex",
-          flexDirection: isMobile ? "column" : "row",
-          justifyContent: "space-between",
-          alignItems: isMobile ? "stretch" : "center",
-          marginBottom: isMobile ? "12px" : "16px",
-          gap: "10px",
+          alignItems: "center",
+          gap: isMobile ? 4 : 6,
+          borderBottom: "1px solid #21262D",
+          marginBottom: isMobile ? 12 : 16,
+          padding: "0 2px",
         }}
       >
-        {/* Search Input */}
-        <div style={{ flex: 1, minWidth: isMobile ? "100%" : 220 }}>
-          <Input
-            prefix={<SearchOutlined style={{ color: "#8B949E" }} />}
-            placeholder="Search category/notes/asset/liability"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            allowClear
-            style={{
-              background: "#0D1117",
-              borderColor: "#21262D",
-              borderRadius: 8,
-              color: "#F0F6FC",
-            }}
-          />
-        </div>
+        {[
+          {
+            key: "transactions",
+            label: "Transactions",
+            icon: <UnorderedListOutlined style={{ fontSize: 13 }} />,
+          },
+          {
+            key: "allocation",
+            label: "Allocation",
+            icon: <PieChartOutlined style={{ fontSize: 13 }} />,
+          },
+        ].map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                flex: isMobile ? 1 : "none",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 7,
+                padding: isMobile ? "9px 12px" : "9px 16px",
+                background: "transparent",
+                border: "none",
+                borderBottom: isActive
+                  ? "2px solid #38BDF8"
+                  : "2px solid transparent",
+                marginBottom: -1,
+                color: isActive ? "#F0F6FC" : "#8B949E",
+                fontSize: 13,
+                fontWeight: isActive ? 700 : 500,
+                cursor: "pointer",
+                transition: "all 0.18s ease",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              <span style={{ color: isActive ? "#38BDF8" : "#8B949E", display: "inline-flex" }}>
+                {tab.icon}
+              </span>
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Quick Filter Group: Type & Sort */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            flexWrap: "wrap",
-            justifyContent: isMobile ? "space-between" : "flex-end",
-          }}
-        >
-          {/* Type Segmented (All / Income / Expense) */}
-          <Segmented
-            options={[
-              { label: "All", value: "all" },
-              { label: "Income", value: "income" },
-              { label: "Expense", value: "expense" },
-            ]}
-            value={transactionType}
-            onChange={(val) => setTransactionType(val)}
+      {activeTab === "allocation" ? (
+        /* Cycle Cashflow Allocation Donut Chart */
+        <CashflowAllocationCard
+          periodParams={periodParams}
+          refreshTrigger={refreshTrigger}
+        />
+      ) : (
+        <>
+          {/* Secondary Filter Bar: Search, Type Filter, Sort, & View Toggle */}
+          <div
             style={{
-              background: "#0D1117",
+              background: "#161B22",
               border: "1px solid #21262D",
-              padding: "2px",
-              borderRadius: "8px",
-              fontSize: 11,
+              borderRadius: 14,
+              padding: isMobile ? "10px" : "10px 16px",
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              justifyContent: "space-between",
+              alignItems: isMobile ? "stretch" : "center",
+              marginBottom: isMobile ? "12px" : "16px",
+              gap: "10px",
             }}
-          />
-
-          {/* Sort Selector */}
-          <Select
-            value={sortOption}
-            onChange={(val) => setSortOption(val)}
-            style={{ width: isMobile ? "auto" : 160, flex: isMobile ? 1 : "none" }}
-            popupMatchSelectWidth={false}
-            options={[
-              { label: "Newest First", value: "transaction_date desc, created_at desc" },
-              { label: "Oldest First", value: "transaction_date asc, created_at asc" },
-              { label: "Highest Amount", value: "amount desc" },
-              { label: "Lowest Amount", value: "amount asc" },
-            ]}
-          />
-
-          {/* Mobile View Toggle: Cards vs Table */}
-          {isMobile && (
-            <Tooltip title={viewMode === "card" ? "Switch to Table View" : "Switch to Card View"}>
-              <Button
-                icon={viewMode === "card" ? <TableOutlined /> : <AppstoreOutlined />}
-                onClick={() => setViewMode((prev) => (prev === "card" ? "table" : "card"))}
+          >
+            {/* Search Input */}
+            <div style={{ flex: 1, minWidth: isMobile ? "100%" : 220 }}>
+              <Input
+                prefix={<SearchOutlined style={{ color: "#8B949E" }} />}
+                placeholder="Search category/notes/asset/liability"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                allowClear
                 style={{
                   background: "#0D1117",
                   borderColor: "#21262D",
-                  color: "#8B949E",
                   borderRadius: 8,
+                  color: "#F0F6FC",
                 }}
               />
-            </Tooltip>
-          )}
-        </div>
-      </div>
+            </div>
 
-      {/* Main Table / Mobile List */}
-      <ListingTable
-        key={refreshTrigger}
-        columns={columns}
-        endpoint="/v1/transactions"
-        extraParams={extraParams}
-        renderMobileItem={viewMode === "card" ? renderMobileTransaction : null}
-      />
+            {/* Quick Filter Group: Type & Sort */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                flexWrap: "wrap",
+                justifyContent: isMobile ? "space-between" : "flex-end",
+              }}
+            >
+              {/* Type Segmented (All / Income / Expense) */}
+              <Segmented
+                options={[
+                  { label: "All", value: "all" },
+                  { label: "Income", value: "income" },
+                  { label: "Expense", value: "expense" },
+                ]}
+                value={transactionType}
+                onChange={(val) => setTransactionType(val)}
+                style={{
+                  background: "#0D1117",
+                  border: "1px solid #21262D",
+                  padding: "2px",
+                  borderRadius: "8px",
+                  fontSize: 11,
+                }}
+              />
+
+              {/* Sort Selector */}
+              <Select
+                value={sortOption}
+                onChange={(val) => setSortOption(val)}
+                style={{ width: isMobile ? "auto" : 160, flex: isMobile ? 1 : "none" }}
+                popupMatchSelectWidth={false}
+                options={[
+                  { label: "Newest First", value: "transaction_date desc, created_at desc" },
+                  { label: "Oldest First", value: "transaction_date asc, created_at asc" },
+                  { label: "Highest Amount", value: "amount desc" },
+                  { label: "Lowest Amount", value: "amount asc" },
+                ]}
+              />
+
+              {/* Mobile View Toggle: Cards vs Table */}
+              {isMobile && (
+                <Tooltip title={viewMode === "card" ? "Switch to Table View" : "Switch to Card View"}>
+                  <Button
+                    icon={viewMode === "card" ? <TableOutlined /> : <AppstoreOutlined />}
+                    onClick={() => setViewMode((prev) => (prev === "card" ? "table" : "card"))}
+                    style={{
+                      background: "#0D1117",
+                      borderColor: "#21262D",
+                      color: "#8B949E",
+                      borderRadius: 8,
+                    }}
+                  />
+                </Tooltip>
+              )}
+            </div>
+          </div>
+
+          {/* Main Table / Mobile List */}
+          <ListingTable
+            key={refreshTrigger}
+            columns={columns}
+            endpoint="/v1/transactions"
+            extraParams={extraParams}
+            renderMobileItem={viewMode === "card" ? renderMobileTransaction : null}
+          />
+        </>
+      )}
 
       {/* Forms & Drawers */}
       <TransactionForm
