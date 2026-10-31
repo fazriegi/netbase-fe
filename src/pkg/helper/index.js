@@ -10,14 +10,10 @@ export function formatRupiah(amount, isPrivacy = false, withSign = false) {
         return isPrivacy ? "Rp ••••••" : "Rp 0";
     }
 
-    if (isPrivacy) {
-        return "Rp ••••••";
-    }
-
     const num = typeof amount === "number" ? amount : parseFloat(amount) || 0;
     const isNegative = num < 0;
     const absVal = Math.abs(num);
-    const formatted = new Intl.NumberFormat("id-ID").format(absVal);
+    const formatted = isPrivacy ? "••••••" : new Intl.NumberFormat("id-ID").format(absVal);
 
     if (withSign && num > 0) {
         return `+Rp ${formatted}`;
