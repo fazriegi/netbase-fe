@@ -1,5 +1,4 @@
 import {
-  Affix,
   Button,
   Form,
   Grid,
@@ -308,20 +307,17 @@ export default function AssetForm({
                 )}
               </div>
 
-              {/* Bottom Sticky Action Buttons */}
-              <Affix offsetBottom={20} style={{ marginTop: "2.5em" }}>
+              {/* Action Buttons */}
+              <Form.Item
+                wrapperCol={{ md: { span: 14, offset: 6 }, xs: { span: 24 } }}
+                style={{ marginTop: 28, marginBottom: 0 }}
+              >
                 <div
                   style={{
                     display: "flex",
                     justifyContent: isMobile ? "stretch" : "flex-end",
                     alignItems: "center",
                     gap: 12,
-                    background: "rgba(22, 27, 34, 0.9)",
-                    backdropFilter: "blur(12px)",
-                    padding: "12px 16px",
-                    borderRadius: 12,
-                    border: "1px solid #30363D",
-                    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
                   }}
                 >
                   {type === "edit" && (
@@ -362,7 +358,7 @@ export default function AssetForm({
                     Save Asset
                   </Button>
                 </div>
-              </Affix>
+              </Form.Item>
             </Form>
           </Card>
         </>
